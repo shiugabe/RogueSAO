@@ -27,4 +27,13 @@ public enum Tile {
         this.color = color;
     }
 
+    //checking if the tile is able to be dug
+    public boolean isDiggable() {
+        return this == Tile.WALL;
+    }
+
+    public boolean isGround() {
+        return this != WALL && this != BOUNDS;
+    }
+
 }

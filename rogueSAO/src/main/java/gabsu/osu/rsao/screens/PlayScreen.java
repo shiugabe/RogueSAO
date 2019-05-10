@@ -4,22 +4,30 @@ import java.awt.event.KeyEvent;
 
 import asciiPanel.AsciiPanel;
 import gabsu.osu.rsao.Aincrad;
+import gabsu.osu.rsao.Creature;
+import gabsu.osu.rsao.CreatureFactory;
 import gabsu.osu.rsao.WorldBuilder;
 
 public class PlayScreen implements Screen {
 
     //initialize private members
     private Aincrad aincrad;
-    private int centerX;
-    private int centerY;
+
     private int screenWidth;
     private int screenHeight;
+    private Creature player;
 
     //public constructor
     public PlayScreen() {
         this.screenWidth = 80;
         this.screenHeight = 21;
         this.createWorld();
+        CreatureFactory creatureFactory = new CreatureFactory(this.aincrad);
+        this.player = creatureFactory.newPlayer();
+
+        for (int i = 0; i < 8; i++) {
+            creatureFactory.newFungus();
+        }
     }
 
     private void createWorld() {
@@ -32,12 +40,12 @@ public class PlayScreen implements Screen {
      *
      */
     public int getScrollX() {
-        return Math.max(0, Math.min(this.centerX - this.screenWidth / 2,
+        return Math.max(0, Math.min(this.player.x - this.screenWidth / 2,
                 this.aincrad.width() - this.screenWidth));
     }
 
     public int getScrollY() {
-        return Math.max(0, Math.min(this.centerY - this.screenHeight / 2,
+        return Math.max(0, Math.min(this.player.y - this.screenHeight / 2,
                 this.aincrad.height() - this.screenHeight));
     }
 
@@ -51,13 +59,13 @@ public class PlayScreen implements Screen {
                         this.aincrad.color(wx, wy));
             }
         }
-    }
 
-    private void scrollBy(int mx, int my) {
-        this.centerX = Math.max(0,
-                Math.min(this.centerX + mx, this.aincrad.width() - 1));
-        this.centerY = Math.max(0,
-                Math.min(this.centerY + my, this.aincrad.height() - 1));
+        for (Creature c : this.aincrad.creatures) {
+            if ((c.x > left && c.x < left + this.screenWidth)
+                    && (c.y >= top && c.y < top + this.screenHeight)) {
+                terminal.write(c.glyph(), c.x - left, c.y - top, c.color());
+            }
+        }
     }
 
     @Override
@@ -66,7 +74,8 @@ public class PlayScreen implements Screen {
         int top = this.getScrollY();
         this.displayTiles(terminal, left, top);
         //show where character is
-        terminal.write('x', this.centerX - left, this.centerY - top);
+        terminal.write(this.player.glyph(), this.player.x - left,
+                this.player.y - top, this.player.color());
         terminal.writeCenter("-- press [escape] to lose or [enter] to win --",
                 22);
     }
@@ -80,31 +89,36 @@ public class PlayScreen implements Screen {
                 return new WinScreen();
             case KeyEvent.VK_LEFT:
             case KeyEvent.VK_H:
-                this.scrollBy(-1, 0);
+                this.player.moveBy(-1, 0);
+                this.aincrad.update();
                 break;
             case KeyEvent.VK_RIGHT:
             case KeyEvent.VK_L:
-                this.scrollBy(1, 0);
+                this.player.moveBy(1, 0);
+                this.aincrad.update();
                 break;
             case KeyEvent.VK_UP:
             case KeyEvent.VK_K:
-                this.scrollBy(0, -1);
+                this.player.moveBy(0, -1);
+                this.aincrad.update();
                 break;
             case KeyEvent.VK_DOWN:
             case KeyEvent.VK_J:
-                this.scrollBy(0, 1);
+                this.player.moveBy(0, 1);
+                this.aincrad.update();
                 break;
             case KeyEvent.VK_Y:
-                this.scrollBy(-1, -1);
+                this.player.moveBy(-1, -1);
+                this.aincrad.update();
                 break;
             case KeyEvent.VK_U:
-                this.scrollBy(1, -1);
+                this.player.moveBy(1, -1);
                 break;
             case KeyEvent.VK_B:
-                this.scrollBy(-1, 1);
+                this.player.moveBy(-1, 1);
                 break;
             case KeyEvent.VK_N:
-                this.scrollBy(1, 1);
+                this.player.moveBy(1, 1);
                 break;
         }
 
